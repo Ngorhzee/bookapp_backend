@@ -28,12 +28,23 @@ def addBook(request: Request):
     title = body.get("title")
     content = body.get("content")
     auth_token = request._request.META.get('HTTP_AUTHORIZATION')
+    
     if (not auth_token):
         return Response({
-            'error':"user not found"
+            'error':"Unauthorized"
         },
-        status=404
+        status=401
         )
-    user= Token.objects.get(key=auth_token)
-    book= Book.objects.create(title=title,content=content,author=user.user)
+    
+    try:
+        token = Token.objects.get(key=auth_token)
+       
+    except Token.DoesNotExist:
+        return Response({
+            'error':"User does not exit"
+        },
+        status=401
+        )
+
+    book= Book.objects.create(title=title,content=content,author=token.user)
     return Response(book_serialiser(book))
